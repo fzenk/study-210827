@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="jspsych/jspsych.js"></script>
+    <script src="jspsych/plugins/jspsych-call-function.js"></script>
+    <script src="jspsych/plugins/jspsych-instructions.js"></script>
+    <script src="jspsych/plugins/jspsych-html-button-response.js"></script>
+    <script src="jspsych/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="jspsych/plugins/jspsych-survey-html-form.js"></script>
+    <script src="jspsych/plugins/jspsych-survey-text.js"></script>
+    <script src="jspsych/plugins/jspsych-fullscreen.js"></script>
+    <script src="jspsych/plugins/jspsych-preload.js"></script>
+    <script src="jspsych-html-audio-response.js"></script>
+    <script src="instructions.js"></script>
+    <meta http-equiv='content-Type' content='text/html; charset=UTF-8'/>
+    <link rel="stylesheet" href="jspsych/css/jspsych.css"></link>
+</head>
+<body></body>
+<script>
+
+    //STUDY_ID = '614300ed562ff6ee272e73d5';
+    //console.log('STUDY_ID: ', STUDY_ID);
+
+    // capture url parameters
+    var STUDY_ID = jsPsych.data.getURLVariable('STUDY_ID');
+    console.log('STUDY_ID: ', STUDY_ID);
+    var participant = jsPsych.data.getURLVariable('PROLIFIC_PID');
+    console.log('participant: ', participant);
+    if (typeof participant !== 'undefined') {
+        jsPsych.data.addProperties({participant: participant});
+    };
+
+    // define variable to keep track of eligibility
+    var eligibility = true;
+
+    // define variable to keep track of task number
+    var task_number = 1;
+
+    // define variables to manage progress bar
+    var trial_count = 0;
+    var n_trials = 9;
+
+    // create main timeline for experiment
+    let timeline = [];
+
+    // login
+
+    var login = {
+        type: 'survey-html-form',
+        data: {trial_name: 'login'},
+        button_label: ko_continue_label,
+        html: ko_login_html,
+        on_load: function(){
+            jsPsych.setProgressBar(0);
+        },
+        on_finish: function(data){
+            participant = data.response.pid;
+            jsPsych.data.addProperties({participant: data.response.pid});
+            console.log('participant: ', participant);
+        }
+    };
+
+    var login_conditional = {
+        timeline: [login],
+        conditional_function: function() {
+            if (typeof STUDY_ID !== 'undefined') {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+    timeline.push(login_conditional);
+
+    // consent form
+
+     var consent = {
+        type: 'survey-html-form',
+        data: {trial_name: 'consent'},
+        button_label: ko_continue_label,
+        html: ko_consent_html,
+        on_load: function(){
+            trial_count++;
+            var progress = trial_count/n_trials;
+            jsPsych.setProgressBar(progress);
+        }
+    };
+    timeline.push(consent);
+
+    // preload media
+
+    var preload = {
+        type: 'preload',
+        images: media
+    };
+    timeline.push(preload);
+
+    // language survey
+
+    var language_survey = {
+        type: 'survey-html-form',
+        data: {trial_name: 'language_survey'},
+        button_label: ko_continue_label,
+        html: ko_language_survey_html,
+        on_load: function(){
+            trial_count++;
+            var progress = trial_count/n_trials;
+            jsPsych.setProgressBar(progress);
+        },
+        on_finish: function(data){
+            console.log('age: ', data.response.age);
+            console.log('korean_proficiency: ', data.response.korean_proficiency);
+            console.log('english_aoa: ', data.response.english_aoa);
+            var qualified = true;
+            if (data.response.age < 18){
+                qualified = false
+            } else if (data.response.korean_proficiency != 'native'){
+                qualified = false
+            } else if (data.response.english_proficiency == 'native'){
+                qualified = false
+            };     
+            console.log('qualified: ', qualified);
+            eligibility = qualified;
+            console.log('eligibility: ', eligibility);
+        }
+    };
+
+    var language_survey_feedback = {
+        type: 'html-keyboard-response',
+        stimulus: language_survey_feedback_stimulus,
+        choices: jsPsych.NO_KEYS,
+        trial_duration: null,
+    };
+
+    var language_survey_feedback_conditional = {
+        timeline: [language_survey_feedback],
+        conditional_function: function() {
+            if (eligibility == false) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    };
+
+    var language_survey_section = {
+        timeline: [language_survey, language_survey_feedback_conditional],
+        randomize_order: false,
+    };
+    timeline.push(language_survey_section);
+
+    // speaking task
+
+        var speaking_setup = {
+        type: 'html-button-response',
+        stimulus: ko_speaking_html,
+        choices: [ko_record_label],
+        on_load: function(){
+            trial_count++;
+            var progress = trial_count/n_trials;
+            jsPsych.setProgressBar(progress);
+        }
+    };
+    timeline.push(speaking_setup);
+
+    var speaking_response = {
+        type: 'html-audio-response',
+        data: {trial_name: 'speaking'},
+        prompt: ko_speaking_html,
+        retry_message: ko_retry,
+        accept_message: ko_accept,
+        buffer_length: 30000,
+        allow_playback: true,
+        wait_for_mic_approval: true,
+        recording_light: ko_recording_light,
+        recording_light_off: ko_recording_light_off,
+    };
+    timeline.push(speaking_response);
+    
+    // c-tests and cloze tests
+
+    var ctest1 = {
+        type: 'survey-html-form',
+        data: {trial_name: 'ctest1'},
+        button_label: ko_continue_label,
+        html: ko_ctest1_html,
+        on_load: function() {
+            task_number ++;
+            document.getElementById("num").innerHTML = task_number;
+            trial_count++;
+            var progress = trial_count/n_trials;
+            jsPsych.setProgressBar(progress);
+        }
+    };
+
+    var ctest2 = {
+        type: 'survey-html-form',
+        data: {trial_name: 'ctest2'},
+        button_label: ko_continue_label,
+        html: ko_ctest2_html,
+        on_load: function() {
+            task_number ++;
+            document.getElementById("num").innerHTML = task_number;
+            trial_count++;
+            var progress = trial_count/n_trials;
+            jsPsych.setProgressBar(progress);
+        }
+    };
+
+    var cloze = {
+        type: 'survey-html-form',
+        data: {trial_name: 'cloze'},
+        button_label: ko_continue_label,
+        html: ko_cloze_html,
+        on_load: function() {
+            task_number ++;
+            document.getElementById("num").innerHTML = task_number;
+            trial_count++;
+            var progress = trial_count/n_trials;
+            jsPsych.setProgressBar(progress);
+        }
+    };
+
+    var blocks = [ctest1, ctest2, cloze];
+    var blocks_rand = jsPsych.randomization.shuffle(blocks);
+    timeline = timeline.concat(blocks_rand);
+
+    // writing task
+
+    var writing = {
+        type: 'survey-html-form',
+        data: {trial_name: 'writing'},
+        button_label: ko_continue_label,
+        html: ko_writing_html,
+        on_load: function(){
+            trial_count++;
+            var progress = trial_count/n_trials;
+            jsPsych.setProgressBar(progress);
+        }
+    };
+    timeline.push(writing);
+
+    // exit survey
+
+    var exit = {
+        type: 'survey-html-form',
+        data: {trial_name: 'exit_survey'},
+        button_label: ko_continue_label,
+        html: ko_exit_html,
+        on_load: function(){
+            trial_count++;
+            var progress = trial_count/n_trials;
+            jsPsych.setProgressBar(progress);
+        },
+        on_finish: function(){
+            trial_count++;
+            var progress = trial_count/n_trials;
+            jsPsych.setProgressBar(progress);
+            jsPsych.getDisplayElement().innerHTML = ko_loading_message;
+        }
+    };
+    timeline.push(exit);
+
+    // initiate experiment
+
+    jsPsych.init({
+        timeline: timeline,
+        show_progress_bar: true,
+        message_progress_bar: ko_progress,
+        auto_update_progress_bar: false,
+        show_preload_progress_bar: true,
+        on_finish: function() {
+            if (typeof STUDY_ID !== 'undefined') {
+                window.location.href = 'https://app.prolific.co/submissions/complete?cc=7EC33615';
+            } else {
+                window.location.href = 'https://oyblcr6zuu.cognition.run/?participant='+participant+'&language=korean';
+            }
+        }
+    });
+
+</script>
+</html>
