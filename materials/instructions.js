@@ -607,7 +607,7 @@ var ko_exit_html =
     exit_header + ko_exit_text
 ;
 
-// loading message
+// * loading message *
 
 var loading_header = 
     '<img src="img_loading.jpg" height="150" title="image credit: tenor (tenor.com)"><br>'
@@ -620,6 +620,34 @@ var zh_loading_text = '<p>LOADING. PLEASE WAIT.</p>';
 var en_loading_message = loading_header + en_loading_text;
 var ko_loading_message = loading_header + ko_loading_text;
 var zh_loading_message = loading_header + zh_loading_text;
+
+// * confirmation page *
+
+var confirmation_header =
+    '<style>p {text-align:center; spellcheck=false;} input[type="text"] {width:8ch;} fieldset {border:1px solid #999;box-shadow:2px 2px 5px #999;} legend {background:#fff;text-align:left;font-size:110%;}</style>'+
+    '<img src="img_confirmation.jpg" height="200" title="image credit: stories / Freepik (www.freepik.com)"><br>'
+;
+var en_confirmation_text =
+    '<span style="font-size:125%;">Thank you!</span>' +
+    '<p>The researcher has been notified of your submission.</p>'
+;
+var ko_confirmation_text =
+    '<span style="font-size:125%;">감사합니다!</span>' +
+    '<p>연구자에게 제출 확인 안내가 발송 되었습니다.</p>'
+;
+var zh_confirmation_text =
+    '<span style="font-size:125%;">謝謝！</span>' +
+    '<p>研究人員已收到您提交的通知。</p>'
+;
+var en_confirmation =
+    confirmation_header+en_confirmation_text
+;
+var ko_confirmation =
+    confirmation_header+ko_confirmation_text
+;
+var zh_confirmation =
+    confirmation_header+zh_confirmation_text
+;
 
 // * chopping block *
 
